@@ -47,7 +47,7 @@ public class Main {
 
         // 配置 tbl_user 表规则
         ShardingTableRuleConfiguration orderTableRuleConfig = new ShardingTableRuleConfiguration("tbl_user",
-            "ds${0..1}.tbl_user_0${0..1}");
+                "ds${0..1}.tbl_user_0${0..1}");
 
 
         //分库分表规则配置
@@ -57,21 +57,21 @@ public class Main {
         Properties dbShardingAlgorithmProps = new Properties();
         dbShardingAlgorithmProps.setProperty("algorithm-expression", "ds${order_id % 2}");
         shardingRuleConfig.getShardingAlgorithms().put("dbShardingAlgorithm",
-            new ShardingSphereAlgorithmConfiguration("INLINE", dbShardingAlgorithmProps));
+                new ShardingSphereAlgorithmConfiguration("INLINE", dbShardingAlgorithmProps));
 
         // 配置分表算法
         Properties tableShardingAlgorithmProps = new Properties();
         tableShardingAlgorithmProps.setProperty("algorithm-expression", "tbl_user_0${order_id % 2}");
         shardingRuleConfig.getShardingAlgorithms().put("tableShardingAlgorithm",
-            new ShardingSphereAlgorithmConfiguration("INLINE", tableShardingAlgorithmProps));
+                new ShardingSphereAlgorithmConfiguration("INLINE", tableShardingAlgorithmProps));
 
         // 配置分库策略
         orderTableRuleConfig.setDatabaseShardingStrategy(
-            new StandardShardingStrategyConfiguration("order_id", "dbShardingAlgorithm"));
+                new StandardShardingStrategyConfiguration("order_id", "dbShardingAlgorithm"));
 
         // 配置分表策略
         orderTableRuleConfig.setTableShardingStrategy(
-            new StandardShardingStrategyConfiguration("order_id", "tableShardingAlgorithm"));
+                new StandardShardingStrategyConfiguration("order_id", "tableShardingAlgorithm"));
 
         // 配置分片规则
         shardingRuleConfig.getTables().add(orderTableRuleConfig);
@@ -85,19 +85,18 @@ public class Main {
         try {
             // 创建 ShardingSphereDataSource
             sharingDataSource = ShardingSphereDataSourceFactory.createDataSource(dataSourceMap,
-                Collections.singleton(shardingRuleConfig), new Properties());
+                    Collections.singleton(shardingRuleConfig), new Properties());
 
             connection = sharingDataSource.getConnection();
 
-            String sql = "insert into tbl_user(user_name,order_id) values('lili',6)";
-            //String sql = "select * from tbl_user where user_name = 'json' limit 2 offset 0 ";
+            String sql = "insert into tbl_user(user_name,order_id) values('lili',2)";
+            //String sql = "select * from tbl_user where user_name = 'lili' order by id  limit 2 offset 0 ";
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.execute();
-            //resultSet =
+            //resultSet = preparedStatement.executeQuery();
             //while (resultSet.next()) {
             //    System.out.println(resultSet.getString(1));
             //    System.out.println(resultSet.getString(2));
-            //
             //}
         } finally {
             if (resultSet != null) {
