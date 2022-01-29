@@ -5,6 +5,11 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.alipay.datasource.test.mybatis.domain.User;
 
 /**
  * @author yi.xia
@@ -13,22 +18,59 @@ import java.sql.SQLException;
  */
 public class Main {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/jdbc_test";
+    private static final String URL = "jdbc:mysql://localhost:3306/jdbc_test?allowMultiQueries=true&rewriteBatchedStatements=true";
     private static final String USER = "root";
     private static final String PASSWORD = "123456";
 
-    public static void main(String[] args) throws SQLException {
+
+    private static void insertBatch() throws SQLException {
         Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
 
-        PreparedStatement preparedStatement = connection.prepareStatement("select * FROM test WHERE id = 1");
-        ResultSet resultSet = preparedStatement.executeQuery();
+        PreparedStatement preparedStatement = connection.prepareStatement("insert into tbl_user(id,user_name) values (?,?);");
 
-        while (resultSet.next()) {
-            System.out.println(resultSet.getInt(1) + "-" + resultSet.getString(2));
+        List<User> list = new ArrayList<>();
+        list.add(new User(24L,"lisa"));
+        list.add(new User(25L,"yel"));
+
+        for (User user : list) {
+            preparedStatement.setInt(1, user.getId().intValue());
+            preparedStatement.setString(2, user.getUserName());
+            preparedStatement.addBatch();
         }
 
-        resultSet.close();
+        preparedStatement.executeBatch();
+
         preparedStatement.close();
         connection.close();
+    }
+
+    public static void main(String[] args) throws SQLException {
+        insertBatch();
+        //Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+        //
+        //PreparedStatement preparedStatement = connection.prepareStatement("select * FROM test WHERE id in (?,?)");
+        //ResultSet resultSet = preparedStatement.executeQuery();
+        //
+        //while (resultSet.next()) {
+        //    System.out.println(resultSet.getInt(1) + "-" + resultSet.getString(2));
+        //}
+        //
+        //resultSet.close();
+        //preparedStatement.close();
+        //connection.close();
+
+        //PreparedStatement preparedStatement = connection.prepareStatement(
+        //    "insert into test(id, name) values (null,'jack'),(null,'jack2')", Statement.RETURN_GENERATED_KEYS);
+        //
+        //preparedStatement.executeUpdate();
+        //
+        //ResultSet resultSet = preparedStatement.getGeneratedKeys();
+        //while (resultSet.next()) {
+        //    System.out.println(resultSet.getInt(1));
+        //}
+        //
+        //resultSet.close();
+        //preparedStatement.close();
+        //connection.close();
     }
 }
