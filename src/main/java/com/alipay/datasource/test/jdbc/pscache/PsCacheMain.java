@@ -1,4 +1,4 @@
-package com.alipay.datasource.test.jdbc;
+package com.alipay.datasource.test.jdbc.pscache;
 
 import java.sql.*;
 
@@ -10,6 +10,7 @@ import java.sql.*;
  * @author wangte
  * Create At 2021/7/10
  */
+@SuppressWarnings("DuplicatedCode")
 public class PsCacheMain {
 
     /**

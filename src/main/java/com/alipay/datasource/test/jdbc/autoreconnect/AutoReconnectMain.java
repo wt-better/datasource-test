@@ -1,4 +1,4 @@
-package com.alipay.datasource.test.jdbc;
+package com.alipay.datasource.test.jdbc.autoreconnect;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
