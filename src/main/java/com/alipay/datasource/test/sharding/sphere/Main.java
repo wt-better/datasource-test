@@ -1,6 +1,7 @@
 package com.alipay.datasource.test.sharding.sphere;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,9 +27,8 @@ import org.apache.shardingsphere.sharding.api.config.strategy.sharding.StandardS
 public class Main {
 
     public static void main(String[] args) throws SQLException {
-        // 配置真实数据源
+        // 物理数据源配置
         Map<String, DataSource> dataSourceMap = new HashMap<>();
-
         // 配置第 1 个数据源
         HikariDataSource dataSource1 = new HikariDataSource();
         dataSource1.setDriverClassName("com.mysql.jdbc.Driver");
@@ -36,7 +36,6 @@ public class Main {
         dataSource1.setUsername("root");
         dataSource1.setPassword("123456");
         dataSourceMap.put("ds0", dataSource1);
-
         // 配置第 2 个数据源
         HikariDataSource dataSource2 = new HikariDataSource();
         dataSource2.setDriverClassName("com.mysql.jdbc.Driver");
@@ -45,37 +44,34 @@ public class Main {
         dataSource2.setPassword("123456");
         dataSourceMap.put("ds1", dataSource2);
 
+        // 应用分表规则配置
         // 配置 tbl_user 表规则
         ShardingTableRuleConfiguration orderTableRuleConfig = new ShardingTableRuleConfiguration("tbl_user",
-                "ds${0..1}.tbl_user_0${0..1}");
-
+            "ds${0..1}.tbl_user_0${0..1}");
 
         //分库分表规则配置
         ShardingRuleConfiguration shardingRuleConfig = new ShardingRuleConfiguration();
+        // 配置分库策略
+        orderTableRuleConfig.setDatabaseShardingStrategy(
+            new StandardShardingStrategyConfiguration("order_id", "dbShardingAlgorithm"));
+        // 配置分表策略
+        orderTableRuleConfig.setTableShardingStrategy(
+            new StandardShardingStrategyConfiguration("order_id", "tableShardingAlgorithm"));
+
+        // 配置分片规则
+        shardingRuleConfig.getTables().add(orderTableRuleConfig);
 
         // 配置分库算法
         Properties dbShardingAlgorithmProps = new Properties();
         dbShardingAlgorithmProps.setProperty("algorithm-expression", "ds${order_id % 2}");
         shardingRuleConfig.getShardingAlgorithms().put("dbShardingAlgorithm",
-                new ShardingSphereAlgorithmConfiguration("INLINE", dbShardingAlgorithmProps));
+            new ShardingSphereAlgorithmConfiguration("INLINE", dbShardingAlgorithmProps));
 
         // 配置分表算法
         Properties tableShardingAlgorithmProps = new Properties();
         tableShardingAlgorithmProps.setProperty("algorithm-expression", "tbl_user_0${order_id % 2}");
         shardingRuleConfig.getShardingAlgorithms().put("tableShardingAlgorithm",
-                new ShardingSphereAlgorithmConfiguration("INLINE", tableShardingAlgorithmProps));
-
-        // 配置分库策略
-        orderTableRuleConfig.setDatabaseShardingStrategy(
-                new StandardShardingStrategyConfiguration("order_id", "dbShardingAlgorithm"));
-
-        // 配置分表策略
-        orderTableRuleConfig.setTableShardingStrategy(
-                new StandardShardingStrategyConfiguration("order_id", "tableShardingAlgorithm"));
-
-        // 配置分片规则
-        shardingRuleConfig.getTables().add(orderTableRuleConfig);
-
+            new ShardingSphereAlgorithmConfiguration("INLINE", tableShardingAlgorithmProps));
 
         DataSource sharingDataSource;
         Connection connection = null;
@@ -85,18 +81,30 @@ public class Main {
         try {
             // 创建 ShardingSphereDataSource
             sharingDataSource = ShardingSphereDataSourceFactory.createDataSource(dataSourceMap,
-                    Collections.singleton(shardingRuleConfig), new Properties());
+                Collections.singleton(shardingRuleConfig), new Properties());
 
             connection = sharingDataSource.getConnection();
 
-            String sql = "insert into tbl_user(user_name,order_id) values('lili',2)";
-            //String sql = "select * from tbl_user where user_name = 'lili' order by id  limit 2 offset 0 ";
-            preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.execute();
+            DatabaseMetaData metaData = connection.getMetaData();
+            System.out.println(metaData);
+
+            //String sql = "insert into tbl_user(user_name,order_id) values('lili',6)";
+            //String sql = "select * from tbl_user where user_name = 'json' limit 2 offset 1 ";
+            //String sql = "select avg(id) from tbl_user";
+            //String sql = "SELECT o.user_name FROM tbl_user o ORDER BY o.id";
+            //String sql = "update tbl_user set order_id = ? where id = ?";
+            //String sql = "select * from tbl_user where order_id in (4,6)";
+            //String sql = "select * from tbl_user where id in (1,2)";
+            //preparedStatement = connection.prepareStatement(sql);
+            //preparedStatement.setLong(1,1);
+            //preparedStatement.setLong(2,1);
+            //preparedStatement.executeUpdate();
             //resultSet = preparedStatement.executeQuery();
+
             //while (resultSet.next()) {
             //    System.out.println(resultSet.getString(1));
             //    System.out.println(resultSet.getString(2));
+            //
             //}
         } finally {
             if (resultSet != null) {
