@@ -9,6 +9,7 @@ import java.sql.Statement;
  * @date Create At 2022/1/29
  * @link <a href=mailto:yixia.wt@alibaba-inc.com></a>
  */
+@SuppressWarnings("AlibabaRemoveCommentedCode")
 public class Main {
 
     private static final String URL = "jdbc:mysql://localhost:3306/jdbc_test";
